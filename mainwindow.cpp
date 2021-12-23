@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
             if (i % 2 == 0 && j % 2 == 0)
             {
                 mLight[n] = new QCheckBox(QString::number(n), this);
+                mLight[n]->setObjectName("lightStyle");
                 connect(mLight[n], &QCheckBox::stateChanged, this, &MainWindow::lightClicked);
 
                 mainLayout->addWidget(mLight[n], i, j);
@@ -32,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
             else if ((i % 2 == 0 && j % 2 != 0) || (i % 2 != 0 && j % 2 == 0))
             {
                 mLock[n] = new QCheckBox(QString::number(n), this);
+                mLock[n]->setObjectName("lockStyle");
                 connect(mLock[n], &QCheckBox::stateChanged, this, &MainWindow::lockClicked);
 
                 mainLayout->addWidget(mLock[n], i, j, Qt::AlignCenter);
@@ -51,31 +53,45 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
+//    setStyleSheet("QCheckBox::indicator::unchecked#lightStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/flashlight_off.svg)}"
+//                  "QCheckBox::indicator::checked#lightStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/flashlight_on.svg)}"
+//                  "QCheckBox::indicator::unchecked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_open.svg)}"
+//                  "QCheckBox::indicator::checked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_close.svg)}");
+
     connect(this, &MainWindow::respondToHLock, this, [=](QString value){
         if (mLight[value.toInt() + 1]->isChecked())
         {
             mLight[value.toInt() - 1]->setChecked(true);
-
-//            mLight[value.toInt() + 1]->setEnabled(false);
-//            mLight[value.toInt() - 1]->setEnabled(false);
+            if (!turnedOnBoxes.contains(QString::number(value.toInt() - 1)))
+                turnedOnBoxes.append(QString::number(value.toInt() - 1));
         }
         if (mLight[value.toInt() -1]->isChecked())
         {
             mLight[value.toInt() + 1]->setChecked(true);
-
-//            mLight[value.toInt() - 1]->setEnabled(false);
-//            mLight[value.toInt() + 1]->setEnabled(false);
+            if (!turnedOnBoxes.contains(QString::number(value.toInt() + 1)))
+                turnedOnBoxes.append(QString::number(value.toInt() + 1));
         }
     });
     connect(this, &MainWindow::respondToVLock, this, [=](QString value){
         if (mLight[value.toInt() + mRows]->isChecked())
         {
             mLight[value.toInt() - mRows]->setChecked(true);
+            if (!turnedOnBoxes.contains(QString::number(value.toInt() + 1)))
+                turnedOnBoxes.append(QString::number(value.toInt() + 1));
         }
         if (mLight[value.toInt() - mRows]->isChecked())
         {
             mLight[value.toInt() + mRows]->setChecked(true);
+            if (!turnedOnBoxes.contains(QString::number(value.toInt() - 1)))
+                turnedOnBoxes.append(QString::number(value.toInt() - 1));
         }
+    });
+
+    connect(this, &MainWindow::respondToTurnOnLight, this, [=](QString value){
+        mLight[value.toInt()]->setChecked(true);
+    });
+    connect(this, &MainWindow::respondToTurnOffLight, this, [=](QString value){
+        mLight[value.toInt()]->setChecked(false);
     });
 }
 
@@ -87,6 +103,8 @@ void MainWindow::lightClicked(int state)
 {
     bool lightOn;
     QCheckBox *mLight = (QCheckBox *)sender();
+    QString choosenLight = mLight->text();
+    QVector<QString> furtherValues = {};
 
     state == 2 ? lightOn = true : lightOn = false;
 
@@ -100,12 +118,31 @@ void MainWindow::lightClicked(int state)
             turnedOnBoxes.removeOne(mLight->text()); // usuwa gdy odznaczamy
     }
 
-//    if (mapLightLock.contains(mLight->text()))
-//    {
-//        QList<QString> values = mapLightLock.values(mLight->text());
-//        for (int k = 0; k < values.size(); ++k)
-//            qDebug() << values.at(k);
-//    }
+    if (mapLightLock.contains(choosenLight))
+    {
+        QVector<QString> values = mapLightLock.values(choosenLight);
+        for (int k = 0; k < values.size(); ++k)
+        {
+            if (lockedBoxes.contains(values.at(k)))
+            {
+                furtherValues.append(mapLockLight.values(values.at(k)));
+                for (int m = 0; m < furtherValues.size(); ++m)
+                {
+                    if (furtherValues.at(m) != choosenLight)
+                    {
+                        if (lightOn)
+                        {
+                            emit respondToTurnOnLight(furtherValues.at(m));
+                        }
+                        else
+                        {
+                            emit respondToTurnOffLight(furtherValues.at(m));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void MainWindow::lockClicked(int state)
@@ -113,54 +150,45 @@ void MainWindow::lockClicked(int state)
     bool lockOn;
     QCheckBox *mLock = (QCheckBox *)sender();
     QString choosenLock = mLock->text();
+    QVector<QString> alreadyUsedLocks = {}, furtherValues = {};
 
     state == 2 ? lockOn = true : lockOn = false;
 
     if (lockOn)
     {
         lockedBoxes.append(mLock->text());
-        qDebug()<<"1";
 
-        auto recurency = [=](QString choosenLock, auto &&recurency)->QString{
-            qDebug()<<"2";
-            if (mapLockLight.contains(choosenLock)) // 34
+        auto lockRecurency = [&](QString choosenLock, auto &&lockRecurency)->void
+        {
+            if (mapLockLight.contains(choosenLock))
             {
-                QList<QString> values = mapLockLight.values(choosenLock); // (24, 44)
-                qDebug()<<values<<turnedOnBoxes;
+                QVector<QString> values = mapLockLight.values(choosenLock);
                 for (int k = 0; k < values.size(); ++k)
                 {
-                    qDebug()<<values.at(k);
+                    furtherValues.append(mapLightLock.values(values.at(k)));
                     if (turnedOnBoxes.contains(values.at(k)))
                     {
-                        qDebug()<<"3";
                         if (values.at(k).toInt() == choosenLock.toInt() - 1
                                 || values.at(k).toInt() == choosenLock.toInt() + 1)
                             emit respondToHLock(choosenLock);
                         else
                             emit respondToVLock(choosenLock);
-                    }
-//                    if (values.at(k) != choosenLock
-//                            && lockedBoxes.contains(values.at(k)))
-//                    {
-//                        qDebug()<<values.at(k);
-//                        return recurency(values.at(k), recurency);
-//                    }
 
-                    QList<QString> furtherValues = mapLightLock.values(values.at(k)); // (34, 43, 45, 54), (14, 23, 25, 34)
-                    for (int m = 0; m < furtherValues.size(); ++m)
-                    {
-                        qDebug()<<furtherValues.at(m);
-                        if (furtherValues.at(m) != choosenLock
-                                && lockedBoxes.contains(furtherValues.at(m)))
+                        for (int m = 0; m < furtherValues.size(); ++m)
                         {
-                            qDebug()<<furtherValues.at(m); // >43< 34
-                            return recurency(furtherValues.at(m), recurency);
+                            if (furtherValues.at(m) != choosenLock
+                                    && lockedBoxes.contains(furtherValues.at(m))
+                                    && !alreadyUsedLocks.contains(furtherValues.at(m)))
+                            {
+                                alreadyUsedLocks.append(choosenLock);
+                                return lockRecurency(furtherValues.at(m), lockRecurency);
+                            }
                         }
                     }
                 }
             }
         };
-        recurency(choosenLock, recurency);
+        lockRecurency(choosenLock, lockRecurency);
     }
     else
     {

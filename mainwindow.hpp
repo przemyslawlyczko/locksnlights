@@ -28,4 +28,6 @@ public:
 signals:
     void respondToHLock(QString value);
     void respondToVLock(QString value);
+    void respondToTurnOnLight(QString value);
+    void respondToTurnOffLight(QString value);
 };
