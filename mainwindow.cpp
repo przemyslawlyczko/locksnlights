@@ -53,10 +53,14 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
-//    setStyleSheet("QCheckBox::indicator::unchecked#lightStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/flashlight_off.svg)}"
-//                  "QCheckBox::indicator::checked#lightStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/flashlight_on.svg)}"
-//                  "QCheckBox::indicator::unchecked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_open.svg)}"
-//                  "QCheckBox::indicator::checked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_close.svg)}");
+    mainLayout->setContentsMargins(30, 30, 30, 30);
+    mainLayout->setHorizontalSpacing(30);
+    mainLayout->setVerticalSpacing(30);
+    setStyleSheet("QCheckBox::indicator::unchecked#lightStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/flashlight_off.svg)}"
+                  "QCheckBox::indicator::checked#lightStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/flashlight_on.svg)}"
+                  "QCheckBox::indicator::unchecked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_open.svg)}"
+                  "QCheckBox::indicator::checked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_close.svg)}"
+                  "QCheckBox {color: rgb(240, 240, 240)}");
 
     connect(this, &MainWindow::respondToHLock, this, [=](QString value){
         if (mLight[value.toInt() + 1]->isChecked())
