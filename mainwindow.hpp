@@ -3,7 +3,6 @@
 #include <QMainWindow>
 #include <QGridLayout>
 #include <QCheckBox>
-#include <QPushButton>
 #include <QDebug>
 #include <QString>
 #include <QMultiHash>
@@ -17,17 +16,16 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    const int mRows = 7, mCols = 7;
-    bool mIsButtonClicked;
-    QMultiHash<QString, QString> mapLightLock, mapLockLight;
-    QVector<QString> lockedBoxes, turnedOnBoxes;
-
     void lightClicked(int state);
     void lockClicked(int state);
 
 signals:
-    void respondToHLock(QString value);
-    void respondToVLock(QString value);
-    void respondToTurnOnLight(QString value);
-    void respondToTurnOffLight(QString value);
+    void respondToLock(QString value, QString choosenLock);
+    void respondToLight(QString value, bool isLightOn);
+
+private:
+    int mRows, mCols;
+    bool mIsButtonClicked;
+    QMultiHash<QString, QString> mapLightLock, mapLockLight;
+    QVector<QString> lockedBoxes, turnedOnBoxes;
 };

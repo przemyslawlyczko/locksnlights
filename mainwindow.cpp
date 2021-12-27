@@ -5,6 +5,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setCentralWidget(new QWidget(this));
     QGridLayout *mainLayout = new QGridLayout(centralWidget());
+    mRows = 7, mCols = 7;
     QCheckBox *mLock[mRows * mCols];
     QCheckBox *mLight[49];
     int n = 0;
@@ -23,11 +24,11 @@ MainWindow::MainWindow(QWidget *parent)
 
                 if (j > 0)
                     mapLightLock.insert(QString::number(n), QString::number(n - 1));
-                if (j < 6)
+                if (j < mCols - 1)
                     mapLightLock.insert(QString::number(n), QString::number(n + 1));
                 if (i > 0)
                     mapLightLock.insert(QString::number(n), QString::number(n - mRows));
-                if (i < 6)
+                if (i < mRows - 1)
                     mapLightLock.insert(QString::number(n), QString::number(n + mRows));
             }
             else if ((i % 2 == 0 && j % 2 != 0) || (i % 2 != 0 && j % 2 == 0))
@@ -53,6 +54,16 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
+    // ============= add new Lock ===============
+//    mLock[49] = new QCheckBox(QString::number(49), this);
+//    connect(mLock[49], &QCheckBox::stateChanged, this, &MainWindow::lockClicked);
+//    mainLayout->addWidget(mLock[49], 7, 8, Qt::AlignCenter);
+//    mapLockLight.insert(QString::number(49), QString::number(0));
+//    mapLockLight.insert(QString::number(49), QString::number(48));
+//    mapLightLock.insert(QString::number(0), QString::number(49));
+//    mapLightLock.insert(QString::number(48), QString::number(49));
+    // ============= /add new Lock ==============
+
     mainLayout->setContentsMargins(30, 30, 30, 30);
     mainLayout->setHorizontalSpacing(30);
     mainLayout->setVerticalSpacing(30);
@@ -62,40 +73,20 @@ MainWindow::MainWindow(QWidget *parent)
                   "QCheckBox::indicator::checked#lockStyle {image: url(C:/Users/Orbitvu/Documents/Qt/klodki/lock_close.svg)}"
                   "QCheckBox {color: rgb(240, 240, 240)}");
 
-    connect(this, &MainWindow::respondToHLock, this, [=](QString value){
-        if (mLight[value.toInt() + 1]->isChecked())
+    connect(this, &MainWindow::respondToLock, this, [=](QString value, QString choosenLock){
+        QVector<QString> checkState = mapLockLight.values(choosenLock);
+        bool lightState = false;
+
+        for (int i = 0; i < checkState.size(); i++)
         {
-            mLight[value.toInt() - 1]->setChecked(true);
-            if (!turnedOnBoxes.contains(QString::number(value.toInt() - 1)))
-                turnedOnBoxes.append(QString::number(value.toInt() - 1));
+            if (turnedOnBoxes.contains(checkState.at(i)))
+                lightState = true;
         }
-        if (mLight[value.toInt() -1]->isChecked())
-        {
-            mLight[value.toInt() + 1]->setChecked(true);
-            if (!turnedOnBoxes.contains(QString::number(value.toInt() + 1)))
-                turnedOnBoxes.append(QString::number(value.toInt() + 1));
-        }
-    });
-    connect(this, &MainWindow::respondToVLock, this, [=](QString value){
-        if (mLight[value.toInt() + mRows]->isChecked())
-        {
-            mLight[value.toInt() - mRows]->setChecked(true);
-            if (!turnedOnBoxes.contains(QString::number(value.toInt() + 1)))
-                turnedOnBoxes.append(QString::number(value.toInt() + 1));
-        }
-        if (mLight[value.toInt() - mRows]->isChecked())
-        {
-            mLight[value.toInt() + mRows]->setChecked(true);
-            if (!turnedOnBoxes.contains(QString::number(value.toInt() - 1)))
-                turnedOnBoxes.append(QString::number(value.toInt() - 1));
-        }
+        mLight[value.toInt()]->setChecked(lightState);
     });
 
-    connect(this, &MainWindow::respondToTurnOnLight, this, [=](QString value){
-        mLight[value.toInt()]->setChecked(true);
-    });
-    connect(this, &MainWindow::respondToTurnOffLight, this, [=](QString value){
-        mLight[value.toInt()]->setChecked(false);
+    connect(this, &MainWindow::respondToLight, this, [=](QString value, bool isLightOn){
+        mLight[value.toInt()]->setChecked(isLightOn);
     });
 }
 
@@ -133,16 +124,7 @@ void MainWindow::lightClicked(int state)
                 for (int m = 0; m < furtherValues.size(); ++m)
                 {
                     if (furtherValues.at(m) != choosenLight)
-                    {
-                        if (lightOn)
-                        {
-                            emit respondToTurnOnLight(furtherValues.at(m));
-                        }
-                        else
-                        {
-                            emit respondToTurnOffLight(furtherValues.at(m));
-                        }
-                    }
+                        emit respondToLight(furtherValues.at(m), lightOn);
                 }
             }
         }
@@ -170,14 +152,12 @@ void MainWindow::lockClicked(int state)
                 for (int k = 0; k < values.size(); ++k)
                 {
                     furtherValues.append(mapLightLock.values(values.at(k)));
-                    if (turnedOnBoxes.contains(values.at(k)))
+                    if (!turnedOnBoxes.contains(furtherValues.at(k)))
                     {
-                        if (values.at(k).toInt() == choosenLock.toInt() - 1
-                                || values.at(k).toInt() == choosenLock.toInt() + 1)
-                            emit respondToHLock(choosenLock);
-                        else
-                            emit respondToVLock(choosenLock);
-
+                        emit respondToLock(values.at(k), choosenLock);
+                    }
+                    else
+                    {
                         for (int m = 0; m < furtherValues.size(); ++m)
                         {
                             if (furtherValues.at(m) != choosenLock
