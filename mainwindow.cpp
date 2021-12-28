@@ -55,13 +55,15 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // ============= add new Lock ===============
-//    mLock[49] = new QCheckBox(QString::number(49), this);
-//    connect(mLock[49], &QCheckBox::stateChanged, this, &MainWindow::lockClicked);
-//    mainLayout->addWidget(mLock[49], 7, 8, Qt::AlignCenter);
-//    mapLockLight.insert(QString::number(49), QString::number(0));
-//    mapLockLight.insert(QString::number(49), QString::number(48));
-//    mapLightLock.insert(QString::number(0), QString::number(49));
-//    mapLightLock.insert(QString::number(48), QString::number(49));
+//    int manualLock = 49, manualRow = 7, manualCol = 8, lLight = 0, rLight = 48;
+//    mLock[manualLock] = new QCheckBox(QString::number(manualLock), this);
+//    mLock[manualLock]->setObjectName("lockStyle");
+//    connect(mLock[manualLock], &QCheckBox::stateChanged, this, &MainWindow::lockClicked);
+//    mainLayout->addWidget(mLock[manualLock], manualRow, manualCol, Qt::AlignCenter);
+//    mapLockLight.insert(QString::number(manualLock), QString::number(lLight));
+//    mapLockLight.insert(QString::number(manualLock), QString::number(rLight));
+//    mapLightLock.insert(QString::number(lLight), QString::number(manualLock));
+//    mapLightLock.insert(QString::number(rLight), QString::number(manualLock));
     // ============= /add new Lock ==============
 
     mainLayout->setContentsMargins(30, 30, 30, 30);
